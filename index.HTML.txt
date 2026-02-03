@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>GILLIT ✨ Magical Fan Hub</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@400;600&display=swap');
+body { font-family: 'Quicksand', sans-serif; background: linear-gradient(180deg,#ffe6f2,#fff); margin:0; color:#5a2a4a; }
+header{background:linear-gradient(90deg,#ffb6d9,#ffd6eb);padding:20px;text-align:center;font-size:28px;font-weight:600;box-shadow:0 4px 10px rgba(255,182,217,0.5);}
+nav{display:flex;justify-content:space-around;background:#fff0f8;padding:12px;position:sticky;top:0;}
+nav button{background:none;border:none;font-size:15px;cursor:pointer;color:#b14d87;font-weight:600;}
+nav button:hover{color:#ff5fa2;}
+section{display:none;padding:25px;animation:fade 0.4s ease;}
+section.active{display:block;}
+@keyframes fade{from{opacity:0;}to{opacity:1;}}
+.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:18px;box-shadow:0 6px 20px rgba(255,182,217,0.35);}
+button.primary{background:linear-gradient(90deg,#ff9acb,#ff6fb1);border:none;padding:10px 18px;border-radius:20px;cursor:pointer;color:white;font-weight:600;}
+input{padding:8px 12px;border-radius:12px;border:1px solid #ffd1e8;outline:none;}
+.badge{display:inline-block;background:#ffd6eb;padding:6px 12px;border-radius:12px;margin-right:8px;font-size:13px;}
+</style>
+</head>
+<body>
+
+<header>🌸 GILLIT ✨ Magical Fan Hub</header>
+<nav>
+<button onclick="show('home')">Home</button>
+<button onclick="show('profile')">Profile</button>
+<button onclick="show('charts')">Charts</button>
+<button onclick="show('games')">Games</button>
+<button onclick="show('ranking')">Ranking</button>
+<button onclick="show('playlist')">Playlist</button>
+<button onclick="show('news')">News</button>
+</nav>
+
+<!-- LOGIN / SIGNUP -->
+<section id="auth" class="active">
+<div class="card">
+<h2>🌸 Welcome to GILLIT</h2>
+<input id="email" placeholder="Email"><br><br>
+<input id="password" type="password" placeholder="Password"><br><br>
+<button class="primary" onclick="login()">Login</button>
+<button class="primary" onclick="signup()">Sign Up</button>
+<p id="authMsg"></p>
+</div>
+</section>
+
+<!-- HOME -->
+<section id="home">
+<div class="card">
+<h2>✨ Welcome to GILLIT ✨</h2>
+<p>A baby-pink magical space for ILLIT fans 💖</p>
+<span class="badge">🎧 Stream</span>
+<span class="badge">🎮 Play</span>
+<span class="badge">🖼 Collect</span>
+</div>
+</section>
+
+<!-- PROFILE -->
+<section id="profile">
+<div class="card">
+<h2>🌸 Your Profile</h2>
+<p>Level: <b><span id="level">1</span></b></p>
+<p>XP: <span id="xp">0</span></p>
+<p>🔥 Streaming Streak: <span id="streak">0</span> days</p>
+<button class="primary" onclick="logStream()">Log Today’s Stream</button>
+<button class="primary" onclick="logout()">Logout</button>
+</div>
+<div class="card">
+<h3>🖼 Photocard Collection</h3>
+<ul id="cards"></ul>
+</div>
+</section>
+
+<!-- CHARTS -->
+<section id="charts">
+<div class="card">
+<h2>📊 Spotify</h2>
+<p>#1 Magnetic ✨</p>
+<p>#2 Lucky Girl Syndrome</p>
+</div>
+<div class="card">
+<h2>🍎 Apple Music</h2>
+<p>#1 Magnetic</p>
+<p>#3 Midnight Fiction</p>
+</div>
+</section>
+
+<!-- GAMES -->
+<section id="games">
+<div class="card">
+<h2>🎬 Guess the ILLIT MV</h2>
+<p>3 chances only 💫</p>
+<input id="guess" placeholder="Enter MV name">
+<button class="primary" onclick="guessMV()">Guess</button>
+<p id="gameResult"></p>
+</div>
+</section>
+
+<!-- RANKING -->
+<section id="ranking">
+<div class="card">
+<h2>🏆 Magical Ranking</h2>
+<ol>
+<li>🌟 You — Level <span id="rankLevel">1</span></li>
+<li>✨ FairyFan — Level 120</li>
+<li>💖 PinkStar — Level 88</li>
+</ol>
+</div>
+</section>
+
+<!-- PLAYLIST -->
+<section id="playlist">
+<div class="card">
+<h2>🎵 Playlist Maker</h2>
+<input id="playlistName" placeholder="Playlist name">
+<button class="primary" onclick="createPlaylist()">Create</button>
+<ul id="playlists"></ul>
+</div>
+</section>
+
+<!-- NEWS -->
+<section id="news">
+<div class="card">
+<h2>📰 ILLIT Updates</h2>
+<p>✨ ILLIT reaches new streaming record</p>
+<p>💖 Special stage announced</p>
+</div>
+</section>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+// 🔑 Paste your Firebase config here:
+const firebaseConfig = {
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_PROJECT.firebaseapp.com",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_PROJECT.appspot.com",
+messagingSenderId: "XXXX",
+appId: "XXXX"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// 🌸 Hybrid page
+function show(id){
+document.querySelectorAll("section").forEach(s=>s.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+// 🧩 User data
+let xp=0, level=1, streak=0, lastStream=null, attempts=3;
+const correctMV="Magnetic";
+
+// 💻 Level & streak functions
+function updateLevel(){
+level=Math.min(500,Math.floor(xp/100)+1);
+document.getElementById("level").textContent=level;
+document.getElementById("rankLevel").textContent=level;
+document.getElementById("xp").textContent=xp;
+}
+function logStream(){
+const today=new Date().toDateString();
+if(lastStream===today)return;
+if(lastStream===new Date(Date.now()-86400000).toDateString()){streak++;}else{streak=1;}
+lastStream=today;
+xp+=30;
+document.getElementById("streak").textContent=streak;
+updateLevel();
+saveUser();
+}
+
+// 💌 Games
+function guessMV(){
+if(attempts===0)return;
+const guess=document.getElementById("guess").value;
+if(guess===correctMV){
+xp+=50;
+document.getElementById("cards").innerHTML+="<li>💖 Magnetic Photocard</li>";
+document.getElementById("gameResult").textContent="Correct! ✨";
+attempts=0;
+}else{
+attempts--;
+document.getElementById("gameResult").textContent=attempts>0?`Wrong 💫 ${attempts} tries left`:"Game Over 😭";
+}
+updateLevel();
+saveUser();
+}
+
+// 🎵 Playlist
+function createPlaylist(){
+const name=document.getElementById("playlistName").value;
+if(!name)return;
+xp+=20;
+document.getElementById("playlists").innerHTML+=`<li>🎀 ${name}</li>`;
+updateLevel();
+saveUser();
+}
+
+// 🔐 Firebase Auth
+function signup(){
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
+auth.createUserWithEmailAndPassword(email,password)
+.then(user=>{
+db.collection("users").doc(user.user.uid).set({xp:0,level:1,streak:0,lastStream:null});
+document.getElementById("authMsg").innerText="Account created ✨";
+})
+.catch(err=>document.getElementById("authMsg").innerText=err.message);
+}
+function login(){
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
+auth.signInWithEmailAndPassword(email,password)
+.catch(err=>document.getElementById("authMsg").innerText=err.message);
+}
+function logout(){auth.signOut();show('auth');}
+
+// 🔄 Load user data
+auth.onAuthStateChanged(user=>{
+if(user){
+show('home');
+db.collection("users").doc(user.uid).get().then(doc=>{
+if(doc.exists){
+xp=doc.data().xp; level=doc.data().level; streak=doc.data().streak; lastStream=doc.data().lastStream;
+updateLevel();
+document.getElementById("streak").textContent=streak;
+}
+});
+}
+});
+
+// 💾 Save user data
+function saveUser(){
+const user=auth.currentUser;
+if(user){
+db.collection("users").doc(user.uid).set({xp,level,streak,lastStream});
+}
+}
+</script>
+
+</body>
+</html>
